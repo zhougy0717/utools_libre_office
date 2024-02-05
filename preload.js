@@ -88,10 +88,10 @@ sendReq = (query, cb) => {
   req.end();
 }
 
-const sendReqDebounced = debounce(sendReq, 1000)
+const sendReqDebounced = debounce(sendReq, 300)
 
 window.exports = {
-  'utools_libre_office': {
+  'utools_libre_translate': {
     mode: 'list',
     args: {
       enter: (action, callbackSetList) => {

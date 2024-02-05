@@ -1,6 +1,6 @@
 {
     "version": "0.0.1",
-    "pluginName": "utools_libre_office",
+    "pluginName": "utools_libre_translate",
     "description": "通过utools使用本地构建的LibreOffice服务，实现快速翻译",
     "author": "Ben",
     "homepage": "https://u.tools",
@@ -8,11 +8,11 @@
     "logo": "logo.png",
     "features": [{
         "platform": ["darwin", "win32", "linux"],
-        "code": "utools_libre_office",
+        "code": "utools_libre_translate",
         "explain": "翻译",
         "cmds": [
             "lt",
-            "libreoffice",
+            "libretranslate",
             "fanyi",
             "translate"
         ]
