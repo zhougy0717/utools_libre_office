@@ -95,6 +95,13 @@ window.exports = {
     mode: 'list',
     args: {
       enter: (action, callbackSetList) => {
+        if(utools.isMacOs()) {
+          utools.simulateKeyboardTap('v', 'command')
+        }
+        if (utools.isWindows() || utools.isLinux()) {
+          utools.simulateKeyboardTap('v', 'ctrl')
+        }
+      
         return callbackSetList([])
       },
       search: (action, searchWord, callbackSetList) => { 
