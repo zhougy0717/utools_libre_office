@@ -105,21 +105,71 @@ sendReq = (query, cb) => {
 
 const sendReqDebounced = debounce(sendReq, 300)
 
+function checkLink(url) {
+    return new Promise((resolve, reject) => {
+        const req = http.request(url, { method: 'HEAD' }, (res) => {
+            // 如果响应状态码是 200-299，则认为链接可用
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        });
+
+        req.on('error', (e) => {
+            console.error(`请求遇到问题: ${e.message}`);
+            reject(e);
+        });
+
+        req.end();
+    });
+}
+
+let g_serviceAvailable = false
+
 window.exports = {
   'utools_libre_translate': {
     mode: 'list',
     args: {
       enter: (action, callbackSetList) => {
-        if(utools.isMacOs()) {
-          utools.simulateKeyboardTap('v', 'command')
-        }
-        if (utools.isWindows() || utools.isLinux()) {
-          utools.simulateKeyboardTap('v', 'ctrl')
-        }
+        // 使用示例
+        const url = 'http://127.0.0.1:9911';
+        checkLink(url)
+            .then(isAvailable => {
+                console.log(`链接 ${url} 可用性: ${isAvailable}`);
+                g_serviceAvailable = true
+                callbackSetList([{
+                  "title": 'LibreTranslate已启动且可用',
+                  "description": '',
+                  "icon": "ok.png"
+                }])
+                if(utools.isMacOs()) {
+                  utools.simulateKeyboardTap('v', 'command')
+                }
+                if (utools.isWindows() || utools.isLinux()) {
+                  utools.simulateKeyboardTap('v', 'ctrl')
+                }
+            })
+            .catch(error => {
+                console.error('检测过程中出错:', error);
+                callbackSetList([{
+                  "title": '请确保LibreTranslate已启动',
+                  "description": '',
+                  "icon": "error.png"
+                }])
+            });
       
         return callbackSetList([])
       },
       search: (action, searchWord, callbackSetList) => { 
+        if (!g_serviceAvailable) {
+          callbackSetList([{
+            "title": '请确保LibreTranslate已启动',
+            "description": '',
+            "icon": "red.png"
+          }])
+          return
+        }
         const handleResp = (req, resp) => {
           const detectedLang = resp.detectedLanguage.language
           if (req.target == detectedLang) {
