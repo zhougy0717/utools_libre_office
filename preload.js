@@ -1,4 +1,5 @@
 const http = require('http');
+const querystring = require('querystring');
 
 utools.onPluginEnter(({code, type, payload, option}) => {
   console.log('用户进入插件应用', code, type, payload)
@@ -26,8 +27,22 @@ function debounce(func, wait) {
 
 const langDict = {
   en: 'English',
-  zh: '中文'
+  zh: '中文',
+  zt: '繁體中文',
+  fr: '法语',
+  de: '德语',
+  ja: '日语',
+  ko: '韩语',
+  ru: '俄语',
+  es: '西班牙语',
+  th: '泰国语',
+  it: '意大利语',
+  pt: '葡萄牙语',
+  ar: '阿拉伯语',
+  tr: '土耳其语',
+  hi: '印度语'
 }
+
 sendReq = (query, cb) => {
   // 要发送的数据对象
   const data = {
@@ -38,7 +53,7 @@ sendReq = (query, cb) => {
   };
 
   // 将数据对象转换为JSON字符串
-  const jsonData = JSON.stringify(data);
+  const jsonData = querystring.stringify(data);
 
   // 定义请求选项
   const options = {
@@ -47,8 +62,8 @@ sendReq = (query, cb) => {
     path: '/translate',
     method: 'POST',
     headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': jsonData.length
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(jsonData)
     }
   };
 
@@ -71,7 +86,7 @@ sendReq = (query, cb) => {
         try {
             const parsedData = JSON.parse(responseBody);
             console.log(parsedData);
-            cb(parsedData)
+            cb(data, parsedData)
         } catch (e) {
             console.error(e.message);
         }
@@ -105,20 +120,41 @@ window.exports = {
         return callbackSetList([])
       },
       search: (action, searchWord, callbackSetList) => { 
+        const handleResp = (req, resp) => {
+          const detectedLang = resp.detectedLanguage.language
+          if (req.target == detectedLang) {
+            sendReq({
+              text:searchWord,
+              target: 'en'
+             }, handleResp)
+          }
+          else {
+            callbackSetList([{
+              "title": resp.translatedText,
+              "description": `${langDict[detectedLang]} => ${langDict[req.target]}`,
+              "icon": "logo.png",
+              "action": 'copyText'
+            }, {
+              "title": 'LibreTranslate',
+              "description": 'http://127.0.0.1:9911',
+              "icon": "link.png",
+              "action": 'openLink'
+            }])
+          }
+        }
         sendReqDebounced({
           text:searchWord,
           target: 'zh'
-         }, (resp) => {
-          const detectedLang = resp.detectedLanguage.language
-          callbackSetList([{
-            "title": resp.translatedText,
-            "description": `${langDict[detectedLang]} => ${langDict['zh']}`,
-            "icon": "logo.png"
-          }])
-        })
+         }, handleResp)
       },
       select: (action, itemData) => {
         window.utools.hideMainWindow()
+        if (itemData.action == 'copyText') {
+          utools.copyText(itemData.title)
+        }
+        if (itemData.action == 'openLink') {
+          utools.shellOpenExternal(itemData.description)
+        }
       },
       placeholder: "输入字符，回车翻译"
     }
